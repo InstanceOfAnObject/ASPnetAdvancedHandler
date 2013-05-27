@@ -5,11 +5,14 @@ using System.Web;
 using App.Utilities.Web.Handlers;
 using System.Text;
 using CodeProject.GenericHandler.Demo;
+using System.Web.Script.Serialization;
+using System.ComponentModel;
 
 namespace CodeProject.GenericHandler
 {
 	public class MyFirstHandler : BaseHandler
 	{
+		[Description("Greets the name passed as an argument.")]
 		public object GreetMe(string name) 
 		{
 			return string.Format("Hello {0}!", name);
@@ -45,17 +48,55 @@ namespace CodeProject.GenericHandler
 			return sb.ToString();
 		}
 
-		public object AJAXSendArray(int[] items, Address[] addresses)
+		public object AJAXSendIntArray(int[] items)
 		{
-			string result = "";
-			result += "Items: " + items == null ? "0" : items.Length.ToString();
+			var jsonSer = new JavaScriptSerializer();
+			string json = jsonSer.Serialize(items);
 
-			if (addresses != null)
-			{
-				result += "and Addresses: " + addresses == null ? "0" : addresses.Length.ToString();
-			}
+			return json;
+		}
 
-			return items.Length.ToString();
+		public object AJAXSendComplextTypeArray(int[] items, Address[] addresses)
+		{
+			string json = string.Empty;
+
+			var jsonSer = new JavaScriptSerializer();
+			string jsonItems = jsonSer.Serialize(items);
+			string jsonAddresses = jsonSer.Serialize(addresses);
+
+			json = jsonItems + "\n" + jsonAddresses;
+			return json;
+		}
+
+		[HttpGet]
+		public object GetData()
+		{
+			return "Here's your GET response.";
+		}
+
+		[HttpPost]
+		public object PostData()
+		{
+			return "Here's your POST response.";
+		}
+
+		[HttpPut]
+		public object PutData()
+		{
+			return "Here's your PUT response.";
+		}
+
+		[HttpDelete]
+		public object DeleteData()
+		{
+			return "Here's your DELETE response.";
+		}
+
+		[HttpPost]
+		[HttpPut]
+		public object PostOrPutData()
+		{
+			return "Here's your POST or PUT response.";
 		}
 
 	}

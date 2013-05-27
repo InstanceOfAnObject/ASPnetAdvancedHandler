@@ -10,5 +10,7 @@ namespace CodeProject.GenericHandler.Demo
 		public string Code { get; set; }
 		public string City { get; set; }
 		public string Country { get; set; }
+
+		public List<OtherAttribute> Attributes { get; set; }
 	}
 }

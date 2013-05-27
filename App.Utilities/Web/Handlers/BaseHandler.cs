@@ -156,7 +156,7 @@ namespace App.Utilities.Web.Handlers
 		public bool SkipContentTypeEvaluation { get; set; }
 
 		/// <summary>
-		/// Prints an help page discribng the available methods on this handler.
+		/// Prints an help page discribing the available methods on this handler.
 		/// </summary>
 		/// <returns></returns>
 		public string Help()
@@ -184,6 +184,17 @@ namespace App.Utilities.Web.Handlers
 				if (excludeMethods.FirstOrDefault(c => c.Name == m.Name) != null)
 					continue;
 
+				// get description (search for System.ComponentModel.DescriptionAtrribute)
+				String methodDescription = "<i>No description available</i>";
+				foreach (var attr in m.GetCustomAttributes(true))
+				{
+					if (attr is DescriptionAttribute)
+					{
+						methodDescription = ((DescriptionAttribute)attr).Description;
+					}
+				}
+
+				// get method arguments
 				ParameterInfo[] parameters = m.GetParameters();
 
 				bool RequiresAuthentication = false;
@@ -194,6 +205,7 @@ namespace App.Utilities.Web.Handlers
 				}
 
 				sb.AppendLine("<h3>" + m.Name + (RequiresAuthentication ? " <span style=\"color:#f00\">[Requires Authentication]</span>" : string.Empty) + "</h3>");
+				sb.AppendLine(string.Format("<b>Description: </b><i>{0}</i>", methodDescription));
 
 				sb.AppendLine("<table><tr><td width=\"250px\">");
 				sb.AppendLine("<table width=\"100%\">");

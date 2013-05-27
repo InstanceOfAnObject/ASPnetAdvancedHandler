@@ -7,6 +7,7 @@ using System.Web;
 using System.Web.Script.Serialization;
 using System.IO;
 using System.ComponentModel;
+using System.Text.RegularExpressions;
 
 namespace App.Utilities.Web.Handlers
 {
@@ -17,15 +18,8 @@ namespace App.Utilities.Web.Handlers
 			args = new Dictionary<string, object>();
 			method = string.Empty;
 			string nullKeyParameter = context.Request.QueryString[null];
-			//if (string.IsNullOrEmpty(nullKeyParameter))
-			//{
-			//    if (!string.IsNullOrEmpty(context.Request.QueryString.ToString()) && context.Request.QueryString.ToString().StartsWith("{"))
-			//    {
 
-			//    }
-			//}
-
-			if (context.Request.RequestType.ToUpper() == "POST")
+			if (new List<string>() { "POST", "PUT", "DELETE" }.Contains(context.Request.RequestType.ToUpper()))
 			{
 				string[] requestParams = context.Request.Params.AllKeys;
 				foreach (var item in requestParams)
@@ -111,12 +105,6 @@ namespace App.Utilities.Web.Handlers
 					{
 						returnType = context.Request.QueryString[key];
 					}
-					//else if (key.ToLower().StartsWith("args[") && key.ToLower().EndsWith("[]"))
-					//{	
-					//    // is a value array
-					//    string _key = key.Trim().Substring(5).Replace("[]", "").TrimEnd(']');
-					//    args.Add(_key, context.Request.QueryString[key]);
-					//}
 					else if (key.ToLower().StartsWith("args["))
 					{
 						string _key = key.Trim().Substring(5).TrimEnd(']').Replace("][", "+");
@@ -145,33 +133,6 @@ namespace App.Utilities.Web.Handlers
 			}
 			m = handler.GetType().GetMethod(method);
 
-			
-			// evaluate the handler and method attributes against Http allowed verbs
-			/*
-			 The logic here is:
-			 *	-> if no attribute is found means it allows every verb
-			 *	-> is a method have verb attbibutes defined then it will ignore the ones on the class
-			 *	-> verb attributes on the class are applied to all methods without verb attribues
-			 */
-			var handlerSupportedVerbs = handler.GetType().GetCustomAttributes(typeof(HttpVerbAttribute), true).Cast<HttpVerbAttribute>();
-			var methodSupportedVerbs = m.GetCustomAttributes(typeof(HttpVerbAttribute), true).Cast<HttpVerbAttribute>();
-
-			bool VerbAllowedOnMethod = true;
-			bool VerbAllowedOnHandler = true;
-			if (methodSupportedVerbs.Count() > 0)
-			{
-				VerbAllowedOnMethod = methodSupportedVerbs.FirstOrDefault(x => x.HttpVerb == context.Request.RequestType.ToUpper()) != null;
-			}
-			else if (handlerSupportedVerbs.Count() > 0)
-			{
-				VerbAllowedOnHandler = handlerSupportedVerbs.FirstOrDefault(x => x.HttpVerb == context.Request.RequestType.ToUpper()) != null;
-			}
-
-			if (!VerbAllowedOnMethod || !VerbAllowedOnHandler)
-			{
-				throw new HttpVerbNotAllowedException();
-			}
-
 			List<object> a = new List<object>();
 
 			if (m == null)
@@ -187,6 +148,32 @@ namespace App.Utilities.Web.Handlers
 			}
 			else
 			{
+				// evaluate the handler and method attributes against Http allowed verbs
+				/*
+				 The logic here is:
+				 *	-> if no attribute is found means it allows every verb
+				 *	-> is a method have verb attbibutes defined then it will ignore the ones on the class
+				 *	-> verb attributes on the class are applied to all methods without verb attribues
+				 */
+				var handlerSupportedVerbs = handler.GetType().GetCustomAttributes(typeof(HttpVerbAttribute), true).Cast<HttpVerbAttribute>();
+				var methodSupportedVerbs = m.GetCustomAttributes(typeof(HttpVerbAttribute), true).Cast<HttpVerbAttribute>();
+
+				bool VerbAllowedOnMethod = (methodSupportedVerbs.Count() == 0);
+				bool VerbAllowedOnHandler = (handlerSupportedVerbs.Count() == 0);
+				if (methodSupportedVerbs.Count() > 0)
+				{
+					VerbAllowedOnMethod = methodSupportedVerbs.FirstOrDefault(x => x.HttpVerb == context.Request.RequestType.ToUpper()) != null;
+				}
+				else if (handlerSupportedVerbs.Count() > 0)
+				{
+					VerbAllowedOnHandler = handlerSupportedVerbs.FirstOrDefault(x => x.HttpVerb == context.Request.RequestType.ToUpper()) != null;
+				}
+
+				if (!VerbAllowedOnMethod || !VerbAllowedOnHandler)
+				{
+					throw new HttpVerbNotAllowedException();
+				}
+
 				// security validation: Search for RequireAuthenticationAttribute on the method
 				//		value=true the user must be authenticated (only supports FromsAuthentication for now
 				//		value=false invoke the method
@@ -203,7 +190,7 @@ namespace App.Utilities.Web.Handlers
 
 			foreach (var param in m.GetParameters())
 			{
-				a.Add(ProcessProperty(param.Name, param.ParameterType, 0));
+				a.Add(ProcessProperty(param.Name, param.ParameterType, string.Empty));
 			}
 
 			// OnMethodInvoke -> Invoke -> AfterMethodInvoke
@@ -221,28 +208,83 @@ namespace App.Utilities.Web.Handlers
 		}
 
 
-
-		private object ProcessProperty(string propertyName, Type propertyType, int depth)
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="propertyName"></param>
+		/// <param name="propertyType"></param>
+		/// <param name="parentNamespace">represents the full path of the parent node of the input parameter</param>
+		/// <returns></returns>
+		private object ProcessProperty(string propertyName, Type propertyType, string parentNamespace)
 		{
-			if (propertyType.IsArray)
+			if (propertyType.IsArray || (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(List<>)))
 			{
-				depth++;
-				return HydrateArray(propertyName, propertyType, depth);
+				return HydrateArray(propertyName, propertyType, parentNamespace);
 			}
 			else if (propertyType.IsClass && !propertyType.Equals(typeof(String)))
 			{
-				depth++;
-				return HydrateClass(propertyName, propertyType, depth);
+				return HydrateClass(propertyName, propertyType, parentNamespace);
 			}
 			else
 			{
-				return HydrateValue(propertyName, propertyType);
+				return HydrateValue(propertyName, propertyType, parentNamespace);
 			}
 		}
 
-		private object HydrateArray(string propertyName, Type propertyType, int depth)
+		private object HydrateArray(string propertyName, Type propertyType, string parentNamespace)
 		{
-			return null;
+			Array result = null;
+			Type elementType;
+			
+			if (propertyType.IsGenericType)
+				elementType = propertyType.GetGenericArguments()[0];
+			else
+				elementType = propertyType.GetElementType();
+
+			String propFQN = String.IsNullOrEmpty(parentNamespace) ? propertyName : parentNamespace + "+" + propertyName;
+
+			if (elementType.IsValueType)
+			{
+			    TypeConverter conv = TypeDescriptor.GetConverter(elementType);
+			    string[] values = args[propFQN + "+"].ToString().Split(new char[] { ',' });
+
+				result = Array.CreateInstance(elementType, values.Length);
+
+			    for (int i = 0; i < values.Length; i++)
+			    {
+			        result.SetValue(conv.ConvertFromString(values[i]), i);
+			    }
+			}
+			else
+			{
+				// get the properties in the current nesting depth
+				var objectProperties = args.Keys.ToList().FindAll(k => k.StartsWith(propFQN + "+"));
+
+				// get the number of items in the array
+				int max_index = 0;
+				foreach (var p in objectProperties)
+				{
+					string idx = p.Remove(0, propFQN.Length + 1);
+					idx = idx.Substring(0, idx.IndexOf('+'));
+					int i = Convert.ToInt32(idx);
+					if (i > max_index) max_index = i;
+				}
+
+				// create the instance of the array
+				result = Array.CreateInstance(elementType, max_index + 1);
+				for (int i = 0; i <= max_index; i++)
+				{
+					String nsPrefix = String.Format("{0}+{1}", propFQN, i.ToString());
+					result.SetValue(ProcessProperty(propertyName + "+" + i.ToString(), result.GetType().GetElementType(), parentNamespace), i);
+				}
+			}
+
+			if (propertyType.IsGenericType) 
+			{
+				return Activator.CreateInstance(propertyType, new object[] { result });
+			}
+ 			else
+				return result;
 		}
 
 		/// <summary>
@@ -250,39 +292,40 @@ namespace App.Utilities.Web.Handlers
 		/// </summary>
 		/// <param name="param"></param>
 		/// <returns></returns>
-		public object HydrateValue(string propertyName, Type propertyType)
+		public object HydrateValue(string propertyName, Type propertyType, String parentNamespace)
 		{
-			if (args.Keys.Contains(propertyName))
+			String propFQN = string.IsNullOrEmpty(parentNamespace) ? propertyName : parentNamespace + "+" + propertyName;
+			if (args.Keys.Contains(propFQN))
 			{
 				// its usual to pass an empty json string property but casting it to certain types will throw an exception
-				if (string.IsNullOrEmpty(args[propertyName].ToString()) || args[propertyName].ToString() == "null" || args[propertyName].ToString() == "undefined")
+				if (string.IsNullOrEmpty(args[propFQN].ToString()) || args[propFQN].ToString() == "null" || args[propFQN].ToString() == "undefined")
 				{
 					// handle numerics. convert null or empty input values to 0
 					if (propertyType.Equals(typeof(System.Int16)) || propertyType.Equals(typeof(System.Int32)) ||
 						propertyType.Equals(typeof(System.Int64)) || propertyType.Equals(typeof(System.Decimal)) ||
 						propertyType.Equals(typeof(System.Double)) || propertyType.Equals(typeof(System.Byte)))
 					{
-						args[propertyName] = 0;
+						args[propFQN] = 0;
 					}
 					else if (propertyType.Equals(typeof(System.Guid)))
 					{
-						args[propertyName] = new Guid();
+						args[propFQN] = new Guid();
 					}
 					else if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
 					{
-						args[propertyName] = null;
+						args[propFQN] = null;
 					}
 				}
 
 				// evaluate special types that are not directly casted from string
 				TypeConverter conv = TypeDescriptor.GetConverter(propertyType);
-				if (args[propertyName] == null || propertyType == args[propertyName].GetType())
+				if (args[propFQN] == null || propertyType == args[propFQN].GetType())
 				{
-					return args[propertyName];
+					return args[propFQN];
 				}
 				else
 				{
-					return conv.ConvertFromInvariantString(args[propertyName].ToString());
+					return conv.ConvertFromInvariantString(args[propFQN].ToString());
 				}
 			}
 			else
@@ -296,20 +339,23 @@ namespace App.Utilities.Web.Handlers
 		/// </summary>
 		/// <param name="param"></param>
 		/// <returns></returns>
-		public object HydrateClass(string propertyName, Type propertyType, int depth)
+		public object HydrateClass(string propertyName, Type propertyType, string parentNamespace)
 		{
 			var argumentObject = Activator.CreateInstance(propertyType);
 
-			var objectProperties = args.Keys.ToList().FindAll(k => k.StartsWith(propertyName + "+"));
+			// search for properties on the current namespace
+			string nsPrefix = string.IsNullOrEmpty(parentNamespace) ? propertyName : parentNamespace + "+" + propertyName;
+
+			var objectProperties = args.Keys.ToList().FindAll(k => k.StartsWith(nsPrefix));
+
+			// loop through them 
 			foreach (var p in objectProperties)
 			{
-				string[] nestedProperties = p.Split('+');
-				argumentObject.GetType().GetProperty(nestedProperties[depth]).SetValue(argumentObject, ProcessProperty(propertyName + "+" + nestedProperties[depth], argumentObject.GetType().GetProperty(nestedProperties[depth]).PropertyType, depth), null);
+				String propName = p.Remove(0, nsPrefix.Length + 1).Split('+')[0];
 
-				foreach (var np in nestedProperties)
-				{
-					//argumentObject.GetType().GetProperty(np).SetValue(argumentObject, args[p], null);
-				}
+				argumentObject.GetType()
+					.GetProperty(propName)
+						.SetValue(argumentObject, ProcessProperty(propName, argumentObject.GetType().GetProperty(propName).PropertyType, nsPrefix), null);
 			}
 
 			return argumentObject;

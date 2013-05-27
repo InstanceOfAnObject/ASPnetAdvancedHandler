@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeProject.GenericHandler", "CodeProject.GenericHandler\CodeProject.GenericHandler.csproj", "{F8FA0646-021B-4580-8EF2-7E58B9EF9A3C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeProject.HandlerFormAction", "CodeProject.HandlerFormAction\CodeProject.HandlerFormAction.csproj", "{A2439C13-A5C2-4B69-BD74-CD5E23356E69}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App.Utilities", "App.Utilities\App.Utilities.csproj", "{31EBC3A2-F045-4A32-96EB-F844B00D3A1B}"
 EndProject
 Global
@@ -17,10 +15,6 @@ Global
 		{F8FA0646-021B-4580-8EF2-7E58B9EF9A3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F8FA0646-021B-4580-8EF2-7E58B9EF9A3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F8FA0646-021B-4580-8EF2-7E58B9EF9A3C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A2439C13-A5C2-4B69-BD74-CD5E23356E69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A2439C13-A5C2-4B69-BD74-CD5E23356E69}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A2439C13-A5C2-4B69-BD74-CD5E23356E69}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A2439C13-A5C2-4B69-BD74-CD5E23356E69}.Release|Any CPU.Build.0 = Release|Any CPU
 		{31EBC3A2-F045-4A32-96EB-F844B00D3A1B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{31EBC3A2-F045-4A32-96EB-F844B00D3A1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{31EBC3A2-F045-4A32-96EB-F844B00D3A1B}.Release|Any CPU.ActiveCfg = Release|Any CPU

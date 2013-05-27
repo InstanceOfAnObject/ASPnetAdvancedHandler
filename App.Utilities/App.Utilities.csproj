@@ -45,25 +45,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Data\EntityFramework\DbDataRecordExtensions.cs" />
-    <Compile Include="Data\EntityFramework\DefaultDataOperations.cs" />
-    <Compile Include="Data\EntityFramework\ESQLHelper.cs" />
-    <Compile Include="Data\EntityFramework\QueryEngine\Base\BaseQueryOperator.cs" />
-    <Compile Include="Data\EntityFramework\QueryEngine\Enums\GroupOperatorTypes.cs" />
-    <Compile Include="Data\EntityFramework\QueryEngine\Enums\LogicOperatorTypes.cs" />
-    <Compile Include="Data\EntityFramework\QueryEngine\ExtraInfo\ColumnInformation.cs" />
-    <Compile Include="Data\EntityFramework\QueryEngine\ExtraInfo\ColumnInformationCollection.cs" />
-    <Compile Include="Data\EntityFramework\QueryEngine\ExtraInfo\ColumnTypes.cs" />
-    <Compile Include="Data\EntityFramework\QueryEngine\ImportTemplates\BaseImportTemplate.cs" />
-    <Compile Include="Data\EntityFramework\QueryEngine\ImportTemplates\jqGridSearchImportTemplate.cs" />
-    <Compile Include="Data\EntityFramework\QueryEngine\Operators\GroupOperator.cs" />
-    <Compile Include="Data\EntityFramework\QueryEngine\Operators\LogicOperator.cs" />
-    <Compile Include="Data\EntityFramework\QueryEngine\Operators\NullOperator.cs" />
-    <Compile Include="Data\EntityFramework\QueryEngine\Query.cs" />
-    <Compile Include="Data\PagedList.cs" />
-    <Compile Include="Data\PagingInfo.cs" />
-    <Compile Include="Data\SortDirectionOptions.cs" />
     <Compile Include="Web\Handlers\AjaxCallSignature.cs" />
+    <Compile Include="Web\Handlers\Attributes\HttpDeleteAttribute.cs" />
+    <Compile Include="Web\Handlers\Attributes\HttpPutAttribute.cs" />
     <Compile Include="Web\Handlers\Attributes\HttpGetAttribute.cs" />
     <Compile Include="Web\Handlers\Attributes\HttpPostAttribute.cs" />
     <Compile Include="Web\Handlers\Attributes\HttpVerbAttribute.cs" />

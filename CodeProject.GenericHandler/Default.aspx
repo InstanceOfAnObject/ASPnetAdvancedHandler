@@ -111,12 +111,12 @@
         			Name: 'Alex',
         			Age: 34,
         			Address: {
-        				Street: 'A street somewhereeeee',
+        				Street: 'A street somewhere',
         				DoorNumber: '123A',
         				PostalCode: {
         					Code: '555-1234',
-        					City: 'Lisbon',
-        					Country: 'Portugal'
+        					City: 'Geneva',
+        					Country: 'Switzerland'
         				}
         			}
         		};
@@ -142,28 +142,200 @@
         <p>
 		Here I'm showing how to pass arrays as an argument.<br />
         </p>
-		<input type="button" onclick="AJAXSendArray()" value="Send person data" />
-
+		<input type="button" onclick="AJAXSendIntArray()" value="Send Int array" />
 		<script type="text/javascript">
-			function AJAXSendArray() {
+			function AJAXSendIntArray() {
 				$.ajax({
 					url: 'MyFirstHandler.ashx',
 					type: 'GET',   // I'm doing a POST here just to show it can handle it too... 
-					data: { method: 'AJAXSendArray',
+					data: { method: 'AJAXSendIntArray',
+						args: {
+							items: [1, 2, 3]
+						}
+					},
+					success: function (data) {
+						alert(data);
+					},
+					error: function (a, b, c) {
+						alert('error');
+					}
+				});
+			}
+		</script>
+
+
+		<input type="button" onclick="AJAXSendComplextTypeArray()" value="Send complex type data with nested collections" />
+
+		<script type="text/javascript">
+			function AJAXSendComplextTypeArray() {
+				$.ajax({
+					url: 'MyFirstHandler.ashx',
+					type: 'GET', 
+					data: { method: 'AJAXSendComplextTypeArray',
 						args: {
 							items: [1, 2, 3],
 							addresses: [
-								{ Street: 'Avenue A', DoorNumber: '123', PostalCode: '2900-055' },
-								{ Street: 'Avenue B', DoorNumber: '45', PostalCode: '1900-456' }
+								{ Street: 'Avenue A', DoorNumber: '123', PostalCode: { Code: '2910', City: 'Setubal'} },
+								{ Street: 'Avenue B', DoorNumber: '45',
+									PostalCode: {
+										Code: '666',
+										City: 'The Deep City',
+										Attributes: [
+											{ Name: 'attr1', Value: 'some value 1' },
+											{ Name: 'attr2', Value: 'some value 2' }
+										]
+									}
+								}
 							]
 						}
 					},
 					success: function (data) {
 						alert(data);
+					},
+					error: function (a, b, c) {
+						alert('error');
 					}
 				});
 			}
 		</script>
+
+
+
+		<h1>Returning HTML</h1>
+        <p>
+			You can use this to render HTML also!
+			<a href="MyFirstHandler.ashx?method=GiveMeSomeHTML&text=DummyImput">Click Here</a>
+		</p>
+
+		<h1>Filter your methods by Verb</h1>
+		<p>
+			Here we'll perform calls to methods that only support a certain HTTP verb.<br />
+			By default, both handler and methods support all HTTP verbs.<br />
+			To specify which verb you want to support by method, just decorate it with the right attribute.<br />
+			This can also be done at the Controller level.<br />
+			Verbs showing in <span style="color:#0f0;">GREEN</span> represent successful request.<br />
+			Verbs showing in <span style="color:#f00;">RED</span> represent denied access request.
+		</p>
+        <p id="pHttpGETOnlyTest">
+			<input type="button" onclick="ExecuteHttpGETOnlyTest()" value="HTTP GET only method" />
+			<script type="text/javascript">
+				function ExecuteHttpGETOnlyTest() {
+					ExecuteHttpGETOnlyTest_Verb('GET');
+					ExecuteHttpGETOnlyTest_Verb('POST');
+					ExecuteHttpGETOnlyTest_Verb('PUT');
+					ExecuteHttpGETOnlyTest_Verb('DELETE');
+				};
+
+				function ExecuteHttpGETOnlyTest_Verb(verb) {
+					$('#pHttpGETOnlyTest span').remove();
+
+					$.ajax({
+						url: 'MyFirstHandler.ashx',
+						type: verb,
+						data: { method: 'GetData' },
+						success: function (data) { $('#pHttpGETOnlyTest').append('<span style="color:#0f0;padding:0 5px;">' + verb + '</span>'); },
+						error: function () { $('#pHttpGETOnlyTest').append('<span style="color:#f00;padding:0 5px;">' + verb + '</span>'); }
+					});
+				};
+			</script>
+		</p>
+
+        <p id="pHttpPOSTOnlyTest">
+			<input type="button" onclick="ExecuteHttpPOSTOnlyTest()" value="HTTP POST only method" />
+			<script type="text/javascript">
+				function ExecuteHttpPOSTOnlyTest() {
+					ExecuteHttpPOSTOnlyTest_Verb('GET');
+					ExecuteHttpPOSTOnlyTest_Verb('POST');
+					ExecuteHttpPOSTOnlyTest_Verb('PUT');
+					ExecuteHttpPOSTOnlyTest_Verb('DELETE');
+				};
+
+				function ExecuteHttpPOSTOnlyTest_Verb(verb) {
+					$('#pHttpPOSTOnlyTest span').remove();
+
+					$.ajax({
+						url: 'MyFirstHandler.ashx',
+						type: verb,
+						data: { method: 'PostData' },
+						success: function (data) { $('#pHttpPOSTOnlyTest').append('<span style="color:#0f0;padding:0 5px;">' + verb + '</span>'); },
+						error: function () { $('#pHttpPOSTOnlyTest').append('<span style="color:#f00;padding:0 5px;">' + verb + '</span>'); }
+					});
+				};
+			</script>
+		</p>
+
+		<p id="pHttpPUTOnlyTest">
+			<input type="button" onclick="ExecuteHttpPUTOnlyTest()" value="HTTP PUT only method" />
+			<script type="text/javascript">
+				function ExecuteHttpPUTOnlyTest() {
+					ExecuteHttpPUTOnlyTest_Verb('GET');
+					ExecuteHttpPUTOnlyTest_Verb('POST');
+					ExecuteHttpPUTOnlyTest_Verb('PUT');
+					ExecuteHttpPUTOnlyTest_Verb('DELETE');
+				};
+
+				function ExecuteHttpPUTOnlyTest_Verb(verb) {
+					$('#pHttpPUTOnlyTest span').remove();
+
+					$.ajax({
+						url: 'MyFirstHandler.ashx',
+						type: verb,
+						data: { method: 'PutData' },
+						success: function (data) { $('#pHttpPUTOnlyTest').append('<span style="color:#0f0;padding:0 5px;">' + verb + '</span>'); },
+						error: function () { $('#pHttpPUTOnlyTest').append('<span style="color:#f00;padding:0 5px;">' + verb + '</span>'); }
+					});
+				};
+			</script>
+		</p>
+
+		<p id="pHttpDELETEOnlyTest">
+			<input type="button" onclick="ExecuteHttpDELETEOnlyTest()" value="HTTP DELETE only method" />
+			<script type="text/javascript">
+				function ExecuteHttpDELETEOnlyTest() {
+					ExecuteHttpDELETEOnlyTest_Verb('GET');
+					ExecuteHttpDELETEOnlyTest_Verb('POST');
+					ExecuteHttpDELETEOnlyTest_Verb('PUT');
+					ExecuteHttpDELETEOnlyTest_Verb('DELETE');
+				};
+
+				function ExecuteHttpDELETEOnlyTest_Verb(verb) {
+					$('#pHttpDELETEOnlyTest span').remove();
+
+					$.ajax({
+						url: 'MyFirstHandler.ashx',
+						type: verb,
+						data: { method: 'DeleteData' },
+						success: function (data) { $('#pHttpDELETEOnlyTest').append('<span style="color:#0f0;padding:0 5px;">' + verb + '</span>'); },
+						error: function () { $('#pHttpDELETEOnlyTest').append('<span style="color:#f00;padding:0 5px;">' + verb + '</span>'); }
+					});
+				};
+			</script>
+		</p>
+
+		<p id="pHttpPostOrPutOnlyTest">
+			<input type="button" onclick="ExecuteHttpPostOrPutOnlyTest()" value="HTTP Post or Put only method" />
+			<script type="text/javascript">
+				function ExecuteHttpPostOrPutOnlyTest() {
+					ExecuteHttpPostOrPutOnlyTest_Verb('GET');
+					ExecuteHttpPostOrPutOnlyTest_Verb('POST');
+					ExecuteHttpPostOrPutOnlyTest_Verb('PUT');
+					ExecuteHttpPostOrPutOnlyTest_Verb('DELETE');
+				};
+
+				function ExecuteHttpPostOrPutOnlyTest_Verb(verb) {
+					$('#pHttpPostOrPutOnlyTest span').remove();
+
+					$.ajax({
+						url: 'MyFirstHandler.ashx',
+						type: verb,
+						data: { method: 'PostOrPutData' },
+						success: function (data) { $('#pHttpPostOrPutOnlyTest').append('<span style="color:#0f0;padding:0 5px;">' + verb + '</span>'); },
+						error: function () { $('#pHttpPostOrPutOnlyTest').append('<span style="color:#f00;padding:0 5px;">' + verb + '</span>'); }
+					});
+				};
+			</script>
+		</p>
+
     </div>
     </form>
 </body>
