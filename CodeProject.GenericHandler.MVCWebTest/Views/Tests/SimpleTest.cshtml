@@ -1,0 +1,69 @@
+﻿@{
+    ViewBag.Title = "SimpleTest";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>SimpleTest</h2>
+
+    <div id="divSimpleTest">
+		<input type="button" value="Start simple test" onclick="SimpleTest()" />
+		<span id="total"></span>
+		<div id="result"></div>
+
+
+		<script type="text/javascript">
+			var tracking = [];
+			var numberOfRequests = 100;
+			var finished = 0;
+			var $total = $('span#total');
+			tracking = [];
+
+			var d = new Date();
+
+			function SimpleTest() {
+				tracking.push({ idx: finished, ms: new Date().getTime() });
+
+				$.ajax({
+					url: '/Tests/SimpleMethod',
+					type: 'GET',
+					cache: false,
+					data: { idx: finished },
+					success: function (data) {
+						tracking.push({ idx: data, ms: new Date().getTime() });
+						finished++;
+						$total.html(finished);
+
+						if (finished == numberOfRequests)
+							showResult();
+						else
+							SimpleTest();
+					},
+					error: function () {
+						$("#divSimpleTest").append('0');
+					}
+				});
+			};
+
+			function showResult() {
+				var $result = $('#result');
+				var $list = $("<ul id='list'></ul>");
+				var sum = 0;
+				var count = 0;
+				$.each(tracking, function (idxS, start) {
+					$.each(tracking, function (idxE, end) {
+						if (idxE > idxS && start.idx == end.idx) {
+							var average = end.ms - start.ms;
+							sum += average;
+							$list.append("<li>" + average + "ms</li>");
+
+							count++;
+						}
+					});
+				});
+
+				$list.append("<li>Average: " + (sum / numberOfRequests) + "ms</li>");
+				$result.empty().append($list);
+			}
+		</script>
+
+    </div>
